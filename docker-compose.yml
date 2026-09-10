@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  whatsapp-bot:
+    build: .
+    container_name: whatsapp-ai-bot
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_MODEL=${HF_MODEL:-Qwen/Qwen3.8-27B:novita}
+      - HF_BASE_URL=${HF_BASE_URL:-https://router.huggingface.co/v1}
+      - QWEN_SYSTEM_PROMPT=${QWEN_SYSTEM_PROMPT}
+    volumes:
+      - ./whatsapp_auth:/app/.wwebjs_auth
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

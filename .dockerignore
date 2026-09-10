@@ -1,0 +1,8 @@
+node_modules/
+web/node_modules/
+web/dist/
+.env
+.wwebjs_auth/
+.wwebjs_cache/
+whatsapp_auth/
+.git/

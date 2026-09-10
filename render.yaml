@@ -1,0 +1,20 @@
+services:
+  - type: worker
+    name: whatsapp-qwen-bot
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    disk:
+      name: whatsapp-auth
+      mountPath: /app/.wwebjs_auth
+      sizeGB: 1
+    envVars:
+      - key: HF_TOKEN
+        sync: false
+      - key: HF_MODEL
+        value: Qwen/Qwen3.8-27B:novita
+      - key: HF_BASE_URL
+        value: https://router.huggingface.co/v1
+      - key: QWEN_SYSTEM_PROMPT
+        value: You are a helpful WhatsApp assistant. Keep answers clear and concise.

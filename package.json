@@ -1,0 +1,31 @@
+{
+  "name": "whatsapp-ai-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot powered by Qwen through Hugging Face",
+  "main": "whatsapp-ai-bot.js",
+  "scripts": {
+    "start": "node whatsapp-ai-bot.js",
+    "dev": "nodemon whatsapp-ai-bot.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "qwen",
+    "huggingface",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "whatsapp-web.js": "^1.25.0",
+    "qrcode-terminal": "^0.12.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
