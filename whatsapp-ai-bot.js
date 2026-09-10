@@ -153,7 +153,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Public Health & Status
 app.get('/health', (_req, res) => res.json(publicStatus()));
-app.get('/api/status', apiAuth, (_req, res) => res.json(publicStatus()));
+app.get('/api/status', (_req, res) => res.json(publicStatus()));
 app.get('/api/qr', (_req, res) => res.json({
   qr: qrDataUrl,
   status,
@@ -162,8 +162,8 @@ app.get('/api/qr', (_req, res) => res.json({
   lastEvent
 }));
 
-// Conversations
-app.get('/api/conversations', apiAuth, (_req, res) => {
+// Conversations (Read)
+app.get('/api/conversations', (_req, res) => {
   const conversations = [...conversationHistory.entries()].map(([chatId, messages]) => ({
     chatId,
     messages
