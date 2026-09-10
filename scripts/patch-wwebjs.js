@@ -40,3 +40,4 @@ if (fs.existsSync(clientPath)) {
 } else {
   console.log('[patch-wwebjs] whatsapp-web.js not found in node_modules');
 }
+
