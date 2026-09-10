@@ -4,7 +4,8 @@
   "description": "WhatsApp bot powered by Qwen through Hugging Face",
   "main": "whatsapp-ai-bot.js",
   "scripts": {
-    "start": "node whatsapp-ai-bot.js",
+    "postinstall": "node scripts/patch-wwebjs.js",
+    "start": "node scripts/patch-wwebjs.js && node whatsapp-ai-bot.js",
     "dev": "nodemon whatsapp-ai-bot.js"
   },
   "keywords": [

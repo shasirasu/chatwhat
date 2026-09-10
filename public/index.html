@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp AI Bot — Web Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0b141a;
+      --bg-surface: #111b21;
+      --bg-card: #182229;
+      --bg-card-hover: #202c33;
+      --border-color: rgba(134, 150, 160, 0.15);
+      --border-focus: rgba(0, 168, 132, 0.5);
+      --text-main: #e9edef;
+      --text-muted: #8696a0;
+      --text-sub: #aebac1;
+      --wa-green: #00a884;
+      --wa-green-light: #25d366;
+      --wa-green-glow: rgba(37, 211, 102, 0.2);
+      --accent-blue: #53bdeb;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --bubble-out: #005c4b;
+      --bubble-in: #202c33;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    header.navbar {
+      background: rgba(17, 27, 33, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #00a884 0%, #25d366 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px var(--wa-green-glow);
+    }
+
+    .brand-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: #fff;
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-badge {
+      background: rgba(83, 189, 235, 0.15);
+      color: var(--accent-blue);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .status-dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(2); opacity: 0; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    .status-connected {
+      background: rgba(37, 211, 102, 0.12);
+      color: var(--wa-green-light);
+      border-color: rgba(37, 211, 102, 0.3);
+    }
+    .status-connected .status-dot, .status-connected .status-dot::after {
+      background: var(--wa-green-light);
+    }
+
+    .status-awaiting {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--accent-amber);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .status-awaiting .status-dot, .status-awaiting .status-dot::after {
+      background: var(--accent-amber);
+    }
+
+    .status-disconnected {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--accent-red);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .status-disconnected .status-dot, .status-disconnected .status-dot::after {
+      background: var(--accent-red);
+    }
+
+    .status-loading {
+      background: rgba(83, 189, 235, 0.12);
+      color: var(--accent-blue);
+      border-color: rgba(83, 189, 235, 0.3);
+    }
+    .status-loading .status-dot, .status-loading .status-dot::after {
+      background: var(--accent-blue);
+    }
+
+    .btn-icon {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--text-muted);
+    }
+
+    /* Main Container Layout */
+    main.container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 24px 60px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Banner / Alert */
+    .banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--wa-green);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .banner-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .banner-text b {
+      color: var(--text-main);
+    }
+
+    /* Dashboard Grid */
+    .grid-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 960px) {
+      .grid-dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--wa-green);
+    }
+
+    /* QR Code Display Card */
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--border-color);
+      min-height: 380px;
+      position: relative;
+      text-align: center;
+    }
+
+    .qr-frame {
+      position: relative;
+      padding: 14px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      display: inline-block;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .qr-frame img {
+      display: block;
+      width: 250px;
+      height: 250px;
+      border-radius: 8px;
+    }
+
+    /* Scan line animation */
+    .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #25d366, transparent);
+      box-shadow: 0 0 12px #25d366;
+      animation: scanAnim 2.6s ease-in-out infinite;
+    }
+
+    @keyframes scanAnim {
+      0% { top: 10px; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { top: 260px; opacity: 0; }
+    }
+
+    .qr-status-text {
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .qr-status-sub {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      max-width: 320px;
+    }
+
+    /* Connected View */
+    .connected-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .connected-icon-wrap {
+      width: 80px;
+      height: 80px;
+      background: rgba(37, 211, 102, 0.15);
+      border: 2px solid var(--wa-green-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px var(--wa-green-glow);
+    }
+
+    .connected-icon-wrap svg {
+      width: 42px;
+      height: 42px;
+      fill: var(--wa-green-light);
+    }
+
+    .connected-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .connected-badge {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-color);
+      border-radius: 9999px;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Step guide */
+    .steps-list {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--bg-card);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      font-size: 0.88rem;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      background: var(--wa-green);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-text {
+      color: var(--text-sub);
+    }
+
+    .step-text b {
+      color: var(--text-main);
+    }
+
+    /* Test Messenger Card */
+    .test-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .input-field {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--wa-green);
+      box-shadow: 0 0 0 3px var(--wa-green-glow);
+    }
+
+    textarea.input-field {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: -6px;
+    }
+
+    .chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-sub);
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip:hover {
+      background: var(--bg-card-hover);
+      color: var(--wa-green-light);
+      border-color: var(--wa-green);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00a884 0%, #25d366 100%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px var(--wa-green-glow);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 9px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--text-muted);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* Conversations List */
+    .conv-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .conv-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .conv-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .conv-id {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .conv-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--bg-surface);
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .chat-bubble {
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-top: 6px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .bubble-user {
+      background: var(--bubble-in);
+      color: var(--text-main);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .bubble-bot {
+      background: var(--bubble-out);
+      color: #e9edef;
+      border-left: 3px solid var(--wa-green-light);
+    }
+
+    .bubble-role {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
+
+    /* Metrics Row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .metrics-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .metric-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .metric-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .metric-info h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .metric-info p {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--text-muted);
+      opacity: 0.4;
+      margin-bottom: 12px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(134, 150, 160, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(134, 150, 160, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="#" class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.79 14.07c-.24.68-1.4 1.25-1.92 1.33-.51.07-1.17.1-1.9-.13-.44-.14-1.02-.33-1.78-.66-3.17-1.38-5.23-4.57-5.39-4.78-.16-.21-1.29-1.71-1.29-3.26 0-1.55.81-2.31 1.1-2.62.29-.31.63-.39.84-.39.21 0 .42 0 .61.01.2.01.47-.08.73.55.27.65.92 2.25 1 2.42.08.16.14.36.03.57-.11.22-.17.35-.33.55-.17.2-.35.45-.5.6-.17.17-.34.36-.15.69.2.33.87 1.43 1.87 2.32 1.29 1.15 2.38 1.51 2.71 1.68.34.17.54.14.73-.08.2-.23.86-1 1.09-1.35.23-.34.46-.29.77-.17.31.11 1.98.93 2.32 1.1.34.17.57.26.65.4.08.14.08.82-.16 1.5z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>WhatsApp AI Bot</h1>
+        <p>Qwen 3.8-27B <span class="brand-badge">Novita</span></p>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <div id="statusPill" class="status-pill status-loading">
+        <span class="status-dot"></span>
+        <span id="statusText">Checking connection...</span>
+      </div>
+      <button class="btn-icon" id="btnRefresh" title="Refresh data">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+
+    <!-- Top Alert Banner -->
+    <div class="banner">
+      <div class="banner-text">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Status event: <b id="lastEventText">Initializing WhatsApp Web...</b></span>
+      </div>
+      <div id="relinkButtonArea" style="display: none;">
+        <button class="btn-secondary btn-danger" id="btnLogout">Disconnect / Relink</button>
+      </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(37, 211, 102, 0.15); color: var(--wa-green-light);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </div>
+        <div class="metric-info">
+          <h4>WhatsApp Status</h4>
+          <p id="metricWaStatus">Connecting...</p>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(83, 189, 235, 0.15); color: var(--accent-blue);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"></path><path d="M12 6v6l4 2"></path></svg>
+        </div>
+        <div class="metric-info">
+          <h4>AI Model</h4>
+          <p id="metricModel">Qwen 3.8-27B</p>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div class="metric-info">
+          <h4>Total Chats</h4>
+          <p id="metricChats">0</p>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <div class="metric-info">
+          <h4>Port & Engine</h4>
+          <p>Node.js 3000</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Main Grid -->
+    <div class="grid-dashboard">
+
+      <!-- LEFT COLUMN: QR Code & Link Guide -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            WhatsApp Connection
+          </h2>
+          <span id="qrBadge" class="status-pill status-awaiting" style="font-size: 0.75rem; padding: 3px 10px;">Awaiting QR</span>
+        </div>
+
+        <div class="qr-container" id="qrContainer">
+          <!-- Dynamic Content will be injected here -->
+          <div id="qrLoadingState">
+            <div style="margin-bottom: 16px;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1.5s linear infinite; stroke: var(--wa-green);">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+            </div>
+            <p class="qr-status-text">Starting WhatsApp Web...</p>
+            <p class="qr-status-sub">Please wait while headless Chromium initializes</p>
+          </div>
+        </div>
+
+        <!-- How to Link Steps -->
+        <div class="steps-list" id="stepsList">
+          <div class="step-item">
+            <span class="step-num">1</span>
+            <span class="step-text">Open <b>WhatsApp</b> on your mobile phone</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">2</span>
+            <span class="step-text">Tap <b>Settings</b> (iOS) or <b>⋮ Menu</b> (Android) → <b>Linked Devices</b></span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">3</span>
+            <span class="step-text">Tap <b>Link a Device</b> and point your camera at the QR code above</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Send Test Message & Live Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Test Message & Console
+          </h2>
+        </div>
+
+        <form class="test-form" id="sendForm">
+          <div class="form-group">
+            <label for="inputChatId">WhatsApp Phone Number</label>
+            <input type="text" id="inputChatId" class="input-field" placeholder="e.g. 919876543210 (Country code + number)" required>
+          </div>
+
+          <div class="form-group">
+            <label for="inputMessage">Message to Send</label>
+            <textarea id="inputMessage" class="input-field" placeholder="Type a message to test your WhatsApp bot..." required></textarea>
+          </div>
+
+          <div class="quick-chips">
+            <span class="chip" onclick="prefill('Hello! Tell me who you are and how you can help me.')">👋 Introduction</span>
+            <span class="chip" onclick="prefill('Explain artificial intelligence in simple terms.')">🧠 Explain AI</span>
+            <span class="chip" onclick="prefill('Give me 3 tips to improve focus today.')">🎯 Tips</span>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btnSend">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Send WhatsApp Message
+          </button>
+          <p id="sendFeedback" style="font-size: 0.85rem; margin-top: 4px; display: none;"></p>
+        </form>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 24px 0;">
+
+        <!-- Recent Conversations -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Recent Conversations</h3>
+          <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 10px;" id="btnClearHistory">Clear History</button>
+        </div>
+
+        <div class="conv-list" id="conversationsContainer">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <p>No conversation history yet.<br>Incoming WhatsApp messages will appear here live.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <style>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    let lastQrCode = null;
+    let isConnected = false;
+
+    function prefill(text) {
+      document.getElementById('inputMessage').value = text;
+      document.getElementById('inputMessage').focus();
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) throw new Error('Status request failed');
+        const data = await res.json();
+        renderStatus(data);
+      } catch (err) {
+        console.warn('Status fetch error:', err.message);
+      }
+    }
+
+    async function fetchConversations() {
+      try {
+        const res = await fetch('/api/conversations');
+        if (!res.ok) return;
+        const data = await res.json();
+        renderConversations(data.conversations || []);
+      } catch (err) {
+        console.warn('Conversations fetch error:', err.message);
+      }
+    }
+
+    function renderStatus(data) {
+      const statusPill = document.getElementById('statusPill');
+      const statusText = document.getElementById('statusText');
+      const lastEventText = document.getElementById('lastEventText');
+      const metricWaStatus = document.getElementById('metricWaStatus');
+      const metricChats = document.getElementById('metricChats');
+      const qrBadge = document.getElementById('qrBadge');
+      const qrContainer = document.getElementById('qrContainer');
+      const stepsList = document.getElementById('stepsList');
+      const relinkButtonArea = document.getElementById('relinkButtonArea');
+
+      metricChats.innerText = data.chats || 0;
+      lastEventText.innerText = data.lastEvent || 'Running...';
+
+      if (data.connected) {
+        isConnected = true;
+        statusPill.className = 'status-pill status-connected';
+        statusText.innerText = 'Connected';
+        metricWaStatus.innerText = 'Ready & Online';
+        qrBadge.className = 'status-pill status-connected';
+        qrBadge.innerText = 'Active';
+        stepsList.style.display = 'none';
+        relinkButtonArea.style.display = 'block';
+
+        const phoneInfo = data.botInfo?.wid ? data.botInfo.wid.replace('@c.us', '') : 'WhatsApp Account';
+        const nameInfo = data.botInfo?.pushname ? ` (${data.botInfo.pushname})` : '';
+
+        qrContainer.innerHTML = `
+          <div class="connected-box">
+            <div class="connected-icon-wrap">
+              <svg viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </div>
+            <h3 class="connected-title">WhatsApp is Linked!</h3>
+            <span class="connected-badge">${phoneInfo}${nameInfo}</span>
+            <p class="qr-status-sub">Your AI bot is actively listening and will automatically reply to incoming direct WhatsApp messages using Qwen 3.8-27B.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Not connected
+      relinkButtonArea.style.display = 'none';
+      stepsList.style.display = 'flex';
+
+      if (data.status === 'awaiting_qr' && data.qr) {
+        statusPill.className = 'status-pill status-awaiting';
+        statusText.innerText = 'Scan QR Code';
+        metricWaStatus.innerText = 'Scan Required';
+        qrBadge.className = 'status-pill status-awaiting';
+        qrBadge.innerText = 'QR Code Ready';
+
+        if (lastQrCode !== data.qr) {
+          lastQrCode = data.qr;
+          qrContainer.innerHTML = `
+            <div class="qr-frame">
+              <div class="scan-line"></div>
+              <img src="${data.qr}" alt="WhatsApp Web QR Code" id="qrImage">
+            </div>
+            <p class="qr-status-text">Scan with WhatsApp</p>
+            <p class="qr-status-sub">Point your phone's WhatsApp Linked Devices scanner at this code to connect</p>
+          `;
+        }
+      } else if (data.status === 'authenticating') {
+        statusPill.className = 'status-pill status-loading';
+        statusText.innerText = 'Authenticating...';
+        metricWaStatus.innerText = 'Signing in...';
+        qrBadge.className = 'status-pill status-loading';
+        qrBadge.innerText = 'Authenticating';
+
+        qrContainer.innerHTML = `
+          <div class="connected-box">
+            <div style="margin-bottom: 12px;">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1.5s linear infinite; stroke: var(--wa-green-light);">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+            </div>
+            <h3 class="connected-title">Authenticating Session...</h3>
+            <p class="qr-status-sub">QR code scanned! Finishing WhatsApp synchronization, please wait a few seconds...</p>
+          </div>
+        `;
+      } else {
+        statusPill.className = 'status-pill status-loading';
+        statusText.innerText = data.status || 'Starting...';
+        metricWaStatus.innerText = 'Starting...';
+        qrBadge.className = 'status-pill status-loading';
+        qrBadge.innerText = 'Starting';
+
+        qrContainer.innerHTML = `
+          <div id="qrLoadingState">
+            <div style="margin-bottom: 16px;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1.5s linear infinite; stroke: var(--wa-green);">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+            </div>
+            <p class="qr-status-text">Starting WhatsApp Web Engine...</p>
+            <p class="qr-status-sub">${data.lastEvent || 'Generating QR code, please wait...'}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderConversations(conversations) {
+      const container = document.getElementById('conversationsContainer');
+      if (!conversations || conversations.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <p>No conversation history yet.<br>Incoming WhatsApp messages will appear here live.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = conversations.map(c => {
+        const phone = c.chatId.replace('@c.us', '');
+        const msgs = c.messages || [];
+        const lastMsg = msgs[msgs.length - 1];
+        return `
+          <div class="conv-card">
+            <div class="conv-header">
+              <span class="conv-id">📱 +${phone}</span>
+              <span class="conv-count">${msgs.length} messages</span>
+            </div>
+            ${msgs.slice(-2).map(m => `
+              <div class="chat-bubble ${m.role === 'assistant' ? 'bubble-bot' : 'bubble-user'}">
+                <div class="bubble-role">${m.role === 'assistant' ? '🤖 Qwen AI' : '👤 User'}</div>
+                <div>${escapeHtml(m.content)}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text;
+      return div.innerHTML;
+    }
+
+    // Send Form
+    document.getElementById('sendForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const chatId = document.getElementById('inputChatId').value.trim();
+      const message = document.getElementById('inputMessage').value.trim();
+      const btnSend = document.getElementById('btnSend');
+      const feedback = document.getElementById('sendFeedback');
+
+      btnSend.disabled = true;
+      feedback.style.display = 'block';
+      feedback.style.color = 'var(--text-muted)';
+      feedback.innerText = 'Sending message to WhatsApp...';
+
+      try {
+        const res = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId, message })
+        });
+        const result = await res.json();
+        if (res.ok) {
+          feedback.style.color = 'var(--wa-green-light)';
+          feedback.innerText = '✅ Message sent successfully!';
+          document.getElementById('inputMessage').value = '';
+          fetchConversations();
+        } else {
+          feedback.style.color = 'var(--accent-red)';
+          feedback.innerText = `❌ ${result.error || 'Failed to send'}`;
+        }
+      } catch (err) {
+        feedback.style.color = 'var(--accent-red)';
+        feedback.innerText = `❌ Error: ${err.message}`;
+      } finally {
+        btnSend.disabled = false;
+        setTimeout(() => { feedback.style.display = 'none'; }, 6000);
+      }
+    });
+
+    // Relink / Logout
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to disconnect WhatsApp and scan a new QR code?')) return;
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+        fetchStatus();
+      } catch (e) {
+        alert('Logout error: ' + e.message);
+      }
+    });
+
+    // Clear History
+    document.getElementById('btnClearHistory').addEventListener('click', async () => {
+      if (!confirm('Clear all conversation history?')) return;
+      try {
+        await fetch('/api/conversations/clear', { method: 'POST' });
+        fetchConversations();
+      } catch (e) {
+        alert('Clear error: ' + e.message);
+      }
+    });
+
+    document.getElementById('btnRefresh').addEventListener('click', () => {
+      fetchStatus();
+      fetchConversations();
+    });
+
+    // Initial Load & Polling Loop
+    fetchStatus();
+    fetchConversations();
+    setInterval(fetchStatus, 2500);
+    setInterval(fetchConversations, 8000);
+  </script>
+</body>
+</html>

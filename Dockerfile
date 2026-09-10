@@ -1,11 +1,3 @@
-FROM node:20-bookworm-slim AS dashboard-build
-
-WORKDIR /web
-COPY web/package.json web/package-lock.json ./
-RUN npm ci
-COPY web/ ./
-RUN npm run build
-
 FROM node:20-bookworm-slim
 
 WORKDIR /app
@@ -20,10 +12,14 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV WHATSAPP_AUTH_PATH=/app/.wwebjs_auth
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY scripts/ ./scripts/
+RUN npm ci --omit=dev && node scripts/patch-wwebjs.js
+
 COPY whatsapp-ai-bot.js ./
-COPY --from=dashboard-build /web/dist ./public
+COPY public/ ./public/
 
 VOLUME ["/app/.wwebjs_auth"]
+
+EXPOSE 3000
 
 CMD ["npm", "start"]
