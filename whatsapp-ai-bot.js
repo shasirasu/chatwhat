@@ -3,7 +3,6 @@ const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcodeTerminal = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const axios = require('axios');
 require('dotenv').config();
@@ -137,9 +136,9 @@ app.listen(config.port, () => {
 client.on('qr', async (qr) => {
   status = 'awaiting_qr';
   lastError = null;
-  qrcodeTerminal.generate(qr, { small: true });
   try {
     qrDataUrl = await QRCode.toDataURL(qr, { width: 360, margin: 2 });
+    console.log('WhatsApp QR code is ready in the protected web dashboard.');
   } catch (error) {
     lastError = 'Could not generate the QR image.';
     console.error(lastError, error.message);
