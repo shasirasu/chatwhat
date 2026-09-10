@@ -14,8 +14,6 @@ services:
         sync: false
       - key: DASHBOARD_API_KEY
         generateValue: true
-      - key: DASHBOARD_ORIGIN
-        sync: false
       - key: HF_MODEL
         value: Qwen/Qwen3.8-27B:novita
       - key: HF_BASE_URL

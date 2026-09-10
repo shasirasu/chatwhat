@@ -102,6 +102,7 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/health', (_req, res) => res.json({ ok: true, ...publicStatus() }));
 app.get('/api/status', apiAuth, (_req, res) => res.json(publicStatus()));

@@ -5,7 +5,7 @@ import './styles.css';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [apiUrl, setApiUrl] = useState(() => sessionStorage.getItem('botApiUrl') || '');
+  const [apiUrl, setApiUrl] = useState(() => sessionStorage.getItem('botApiUrl') || window.location.origin);
   const [apiKey, setApiKey] = useState(() => sessionStorage.getItem('botApiKey') || '');
   const [showKey, setShowKey] = useState(false);
   const [status, setStatus] = useState(null);
