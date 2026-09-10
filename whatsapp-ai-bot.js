@@ -58,6 +58,7 @@ function getExecutablePath() {
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: authPath }),
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   puppeteer: {
     headless: true,
     executablePath: getExecutablePath(),
@@ -68,6 +69,7 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
+      '--single-process',
       '--disable-gpu'
     ]
   }
@@ -211,6 +213,26 @@ app.post('/api/messages', apiAuth, async (req, res) => {
   }
 });
 
+// Restart / Reinit Engine
+app.post('/api/reinit', async (req, res) => {
+  try {
+    status = 'starting';
+    qrDataUrl = null;
+    lastError = null;
+    lastEvent = 'Restarting WhatsApp Web client...';
+    try { await client.destroy(); } catch (e) {}
+    client.initialize().catch(err => {
+      console.error('Reinit failed:', err.message);
+      lastError = err.message;
+      status = 'init_failed';
+      lastEvent = `Init failed: ${err.message}`;
+    });
+    res.json({ ok: true, message: 'WhatsApp Web client restarting.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Relink / Logout
 app.post('/api/logout', apiAuth, async (req, res) => {
   try {
@@ -258,6 +280,11 @@ client.on('qr', async (qr) => {
     lastError = 'Could not generate QR image.';
     console.error(lastError, error.message);
   }
+});
+
+client.on('change_state', (state) => {
+  console.log(`WhatsApp state changed: ${state}`);
+  lastEvent = `WhatsApp State: ${state}`;
 });
 
 client.on('ready', () => {

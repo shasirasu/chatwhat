@@ -1068,8 +1068,18 @@
             </div>
             <p class="qr-status-text">Starting WhatsApp Web Engine...</p>
             <p class="qr-status-sub">${data.lastEvent || 'Generating QR code, please wait...'}</p>
+            <button class="btn-secondary" style="margin-top: 14px; font-size: 0.82rem;" onclick="reinitClient()">🔄 Restart Engine</button>
           </div>
         `;
+      }
+    }
+
+    async function reinitClient() {
+      try {
+        await fetch('/api/reinit', { method: 'POST' });
+        fetchStatus();
+      } catch (err) {
+        alert('Restart failed: ' + err.message);
       }
     }
 
