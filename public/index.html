@@ -1020,12 +1020,12 @@
             <p class="qr-status-sub">Point your phone's WhatsApp Linked Devices scanner at this code to connect</p>
           `;
         }
-      } else if (data.status === 'authenticating') {
+      } else if (data.status === 'authenticating' || data.status === 'loading') {
         statusPill.className = 'status-pill status-loading';
-        statusText.innerText = 'Authenticating...';
-        metricWaStatus.innerText = 'Signing in...';
+        statusText.innerText = data.status === 'loading' ? 'Syncing...' : 'Authenticating...';
+        metricWaStatus.innerText = data.status === 'loading' ? 'Syncing Chats' : 'Signing in...';
         qrBadge.className = 'status-pill status-loading';
-        qrBadge.innerText = 'Authenticating';
+        qrBadge.innerText = data.status === 'loading' ? 'Syncing' : 'Authenticating';
 
         qrContainer.innerHTML = `
           <div class="connected-box">
@@ -1041,8 +1041,9 @@
                 <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
               </svg>
             </div>
-            <h3 class="connected-title">Authenticating Session...</h3>
-            <p class="qr-status-sub">QR code scanned! Finishing WhatsApp synchronization, please wait a few seconds...</p>
+            <h3 class="connected-title">${data.status === 'loading' ? 'Synchronizing Chats...' : 'Authenticating Session...'}</h3>
+            <p class="qr-status-text" style="color: var(--wa-green-light); font-size: 1rem; margin-top: 6px;">${data.lastEvent || 'Please wait...'}</p>
+            <p class="qr-status-sub">QR scanned! WhatsApp is synchronizing your session keys. Keep this tab open, it will switch to Connected automatically.</p>
           </div>
         `;
       } else {

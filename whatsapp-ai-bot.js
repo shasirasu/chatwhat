@@ -58,6 +58,9 @@ function getExecutablePath() {
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: authPath }),
+  authTimeoutMs: 120000,
+  takeoverOnConflict: true,
+  qrMaxRetries: 0,
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   puppeteer: {
     headless: true,
