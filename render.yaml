@@ -1,5 +1,5 @@
 services:
-  - type: worker
+  - type: web
     name: whatsapp-qwen-bot
     runtime: docker
     plan: starter
@@ -11,6 +11,10 @@ services:
       sizeGB: 1
     envVars:
       - key: HF_TOKEN
+        sync: false
+      - key: DASHBOARD_API_KEY
+        generateValue: true
+      - key: DASHBOARD_ORIGIN
         sync: false
       - key: HF_MODEL
         value: Qwen/Qwen3.8-27B:novita
