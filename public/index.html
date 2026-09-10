@@ -831,6 +831,27 @@
           <span id="qrBadge" class="status-pill status-awaiting" style="font-size: 0.75rem; padding: 3px 10px;">Awaiting QR</span>
         </div>
 
+        <!-- Link Method Toggle -->
+        <div id="linkMethodTabs" style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button type="button" class="btn-secondary" id="tabQr" style="flex: 1; border-color: var(--wa-green); color: var(--wa-green-light);" onclick="switchLinkTab('qr')">📷 QR Code</button>
+          <button type="button" class="btn-secondary" id="tabPhone" style="flex: 1;" onclick="switchLinkTab('phone')">📱 Link with Phone # (Fast)</button>
+        </div>
+
+        <!-- Phone Pairing Container -->
+        <div id="phonePairingContainer" style="display: none; background: var(--bg-card); border-radius: var(--radius-md); padding: 24px 20px; border: 1px dashed var(--border-color); text-align: center; margin-bottom: 16px;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Instant Pairing Code</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Don't want to wait for QR camera scan? Enter your number to get an 8-character code.</p>
+          <div style="display: flex; gap: 8px; max-width: 360px; margin: 0 auto 14px;">
+            <input type="text" id="inputPairingPhone" class="input-field" placeholder="e.g. 918220092881" style="text-align: center; font-size: 1rem;">
+            <button type="button" class="btn-primary" id="btnGetPairingCode" onclick="requestPairing()" style="white-space: nowrap;">Get Code</button>
+          </div>
+          <div id="pairingCodeResult" style="display: none; margin-top: 16px;">
+            <p style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Enter this code in your phone's WhatsApp:</p>
+            <div id="displayPairingCode" style="font-size: 2.2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.2em; color: var(--wa-green-light); background: var(--bg-surface); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--wa-green); display: inline-block; margin-bottom: 14px;"></div>
+            <p style="font-size: 0.84rem; color: var(--text-sub);">In WhatsApp: <b>Linked Devices ➔ Link a Device ➔ Link with phone number instead</b></p>
+          </div>
+        </div>
+
         <div class="qr-container" id="qrContainer">
           <!-- Dynamic Content will be injected here -->
           <div id="qrLoadingState">
@@ -934,6 +955,62 @@
       document.getElementById('inputMessage').focus();
     }
 
+    function switchLinkTab(tab) {
+      const isQr = tab === 'qr';
+      const qrEl = document.getElementById('qrContainer');
+      const stepsEl = document.getElementById('stepsList');
+      const phoneEl = document.getElementById('phonePairingContainer');
+      const tabQr = document.getElementById('tabQr');
+      const tabPhone = document.getElementById('tabPhone');
+      if (qrEl) qrEl.style.display = isQr ? 'flex' : 'none';
+      if (stepsEl) stepsEl.style.display = isQr ? 'flex' : 'none';
+      if (phoneEl) phoneEl.style.display = isQr ? 'none' : 'block';
+      if (tabQr) {
+        tabQr.style.borderColor = isQr ? 'var(--wa-green)' : 'var(--border-color)';
+        tabQr.style.color = isQr ? 'var(--wa-green-light)' : 'var(--text-main)';
+      }
+      if (tabPhone) {
+        tabPhone.style.borderColor = !isQr ? 'var(--wa-green)' : 'var(--border-color)';
+        tabPhone.style.color = !isQr ? 'var(--wa-green-light)' : 'var(--text-main)';
+      }
+    }
+
+    async function requestPairing() {
+      const phoneInput = document.getElementById('inputPairingPhone');
+      const btn = document.getElementById('btnGetPairingCode');
+      const resultArea = document.getElementById('pairingCodeResult');
+      const codeDisplay = document.getElementById('displayPairingCode');
+      const phone = phoneInput ? phoneInput.value.trim() : '';
+
+      if (!phone || phone.length < 10) {
+        alert('Please enter your full WhatsApp number with country code (e.g. 918220092881)');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Generating...';
+
+      try {
+        const res = await fetch('/api/pairing-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: phone })
+        });
+        const data = await res.json();
+        if (res.ok && data.code) {
+          codeDisplay.innerText = data.code;
+          resultArea.style.display = 'block';
+        } else {
+          alert('Pairing error: ' + (data.error || 'Failed to request code.'));
+        }
+      } catch (err) {
+        alert('Pairing request failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Get Code';
+      }
+    }
+
     async function fetchStatus() {
       try {
         const res = await fetch('/api/status');
@@ -979,6 +1056,11 @@
         qrBadge.innerText = 'Active';
         stepsList.style.display = 'none';
         relinkButtonArea.style.display = 'block';
+        const linkTabs = document.getElementById('linkMethodTabs');
+        const phonePairing = document.getElementById('phonePairingContainer');
+        if (linkTabs) linkTabs.style.display = 'none';
+        if (phonePairing) phonePairing.style.display = 'none';
+        qrContainer.style.display = 'flex';
 
         const phoneInfo = data.botInfo?.wid ? data.botInfo.wid.replace('@c.us', '') : 'WhatsApp Account';
         const nameInfo = data.botInfo?.pushname ? ` (${data.botInfo.pushname})` : '';
@@ -1000,6 +1082,8 @@
 
       // Not connected
       relinkButtonArea.style.display = 'none';
+      const linkTabs = document.getElementById('linkMethodTabs');
+      if (linkTabs) linkTabs.style.display = 'flex';
       stepsList.style.display = 'flex';
 
       if (data.status === 'awaiting_qr' && data.qr) {

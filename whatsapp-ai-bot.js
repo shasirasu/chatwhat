@@ -73,7 +73,22 @@ const client = new Client({
       '--no-first-run',
       '--no-zygote',
       '--single-process',
-      '--disable-gpu'
+      '--disable-gpu',
+      '--disable-extensions',
+      '--disable-default-apps',
+      '--mute-audio',
+      '--disable-background-networking',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-breakpad',
+      '--disable-component-extensions-with-background-pages',
+      '--disable-component-update',
+      '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints,AudioServiceOutOfProcess',
+      '--disable-ipc-flooding-protection',
+      '--disable-renderer-backgrounding',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--no-default-browser-check'
     ]
   }
 });
@@ -233,6 +248,26 @@ app.post('/api/reinit', async (req, res) => {
     res.json({ ok: true, message: 'WhatsApp Web client restarting.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Request Phone Number Pairing Code (Fast alternative to QR)
+app.post('/api/pairing-code', async (req, res) => {
+  const { phoneNumber } = req.body || {};
+  if (!phoneNumber || typeof phoneNumber !== 'string') {
+    return res.status(400).json({ error: 'Phone number is required (with country code, e.g. 919876543210).' });
+  }
+  const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+  if (cleanNumber.length < 10) {
+    return res.status(400).json({ error: 'Please enter a valid phone number with country code.' });
+  }
+  try {
+    const code = await client.requestPairingCode(cleanNumber);
+    console.log(`🔑 Generated pairing code for ${cleanNumber}: ${code}`);
+    res.json({ ok: true, code, phoneNumber: cleanNumber });
+  } catch (err) {
+    console.error('Pairing code error:', err.message);
+    res.status(500).json({ error: err.message || 'Could not generate pairing code.' });
   }
 });
 
