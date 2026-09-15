@@ -58,9 +58,14 @@ function getExecutablePath() {
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: authPath }),
-  authTimeoutMs: 120000,
+  authTimeoutMs: 0,  // 0 = no timeout (wait as long as needed for QR scan)
   takeoverOnConflict: true,
-  qrMaxRetries: 0,
+  qrMaxRetries: 5,   // Refresh QR up to 5 times before giving up
+  webVersion: '2.3000.1047193214',
+  webVersionCache: {
+    type: 'remote',
+    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1047193214.html',
+  },
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   puppeteer: {
     headless: true,
@@ -72,7 +77,6 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--single-process',
       '--disable-gpu',
       '--disable-extensions',
       '--disable-default-apps',
@@ -400,17 +404,52 @@ async function getQwenResponse(userMessage, chatId) {
 }
 
 client.on('disconnected', (reason) => {
-  status = 'disconnected';
-  lastError = reason || 'WhatsApp disconnected.';
-  lastEvent = 'WhatsApp disconnected. Restart the service or relink to reconnect.';
   console.log('⚠️ WhatsApp bot disconnected:', reason);
+  if (reason === 'Max qrcode retries reached') {
+    // QR was never scanned — auto-restart to show a fresh QR
+    status = 'starting';
+    qrDataUrl = null;
+    lastError = null;
+    lastEvent = 'QR timed out. Generating a new QR code...';
+    console.log('🔄 QR timed out, auto-restarting to generate fresh QR...');
+    setTimeout(() => {
+      client.initialize().catch((err) => {
+        const msg = err && (err.message || String(err));
+        console.error('❌ Auto-restart failed:', msg);
+        lastError = msg;
+        status = 'init_failed';
+        lastEvent = `Auto-restart failed: ${msg}`;
+      });
+    }, 2000);
+  } else {
+    status = 'disconnected';
+    lastError = reason || 'WhatsApp disconnected.';
+    lastEvent = 'WhatsApp disconnected. Use "Disconnect / Relink" to get a fresh QR code.';
+  }
 });
 
 client.initialize().catch((err) => {
-  console.error('❌ Failed to initialize WhatsApp client:', err.message);
-  lastError = err.message;
-  status = 'init_failed';
-  lastEvent = `Initialization failed: ${err.message}`;
+  const msg = err && (err.message || String(err));
+  // Transient Puppeteer errors during page teardown/QR timeout are not true failures
+  const isTransient = msg && (
+    msg.includes('detached') ||
+    msg.includes('destroyed') ||
+    msg.includes('Target closed') ||
+    msg.includes('Session closed') ||
+    msg.includes('Protocol error')
+  );
+  if (isTransient) {
+    console.warn('⚠️ WhatsApp client transient error (may recover):', msg);
+    if (status !== 'ready' && status !== 'disconnected') {
+      status = 'starting';
+      lastEvent = 'WhatsApp restarting... Please refresh the page.';
+    }
+  } else {
+    console.error('❌ Failed to initialize WhatsApp client:', msg);
+    lastError = msg;
+    status = 'init_failed';
+    lastEvent = `Initialization failed: ${msg}`;
+  }
 });
 
 console.log('WhatsApp Qwen bot starting...');
